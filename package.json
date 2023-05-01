@@ -1,7 +1,7 @@
 {
-  "name": "com.brandoncoffey.coffey-utils",
+  "name": "com.brandoncoffey.coffeyutils",
   "version": "0.1.0",
-  "displayName": "Coffey Editor Utilites",
+  "displayName": "Coffey Utils",
   "description": "This is Brandon Coffey's Utilities Package",
   "unity": "2021.3",
   "unityRelease": "3f1",
