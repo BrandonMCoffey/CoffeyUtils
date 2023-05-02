@@ -1,8 +1,11 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
+#if ENABLE_INPUT_SYSTEM && ENABLE_INPUT_SYSTEM_PACKAGE
+#define USE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
+#endif
 
 namespace CoffeyUtils
 {
@@ -17,8 +20,13 @@ namespace CoffeyUtils
 				instance = FindObjectOfType<MouseControllerManager>();
 				if (!instance)
 				{
+#if USE_INPUT_SYSTEM
 					var inputSystem = FindObjectOfType<InputSystemUIInputModule>();
 					instance = inputSystem.gameObject.AddComponent<MouseControllerManager>();
+#else
+					var inputSystem = FindObjectOfType<StandaloneInputModule>();
+					instance = inputSystem.gameObject.AddComponent<MouseControllerManager>();
+#endif
 				}
 				instance.FindReferences();
 				return instance;
@@ -34,8 +42,76 @@ namespace CoffeyUtils
 		[SerializeField] private bool _assumeMouseFirst = true;
 		[SerializeField] private float _ignoreMouseTime = 0.1f;
 		[SerializeField, ReadOnly] private GameObject _currentlySelected;
-	    
+		
+#if USE_INPUT_SYSTEM
+		// New Input System
 		private InputSystemUIInputModule _inputSystem;
+
+		private void FindReferences()
+		{
+			if (!_inputSystem) _inputSystem = GetComponent<InputSystemUIInputModule>();
+			if (!_inputSystem) FindObjectOfType<InputSystemUIInputModule>();
+		}
+		private void OnEnable()
+		{
+			_inputSystem.move.action.performed += OnKeyboardControllerMovement;
+			_inputSystem.point.action.performed += OnMouseMovement;
+		}
+		private void OnDisable()
+		{
+			_inputSystem.move.action.performed -= OnKeyboardControllerMovement;
+			_inputSystem.point.action.performed -= OnMouseMovement;
+		}
+		private void OnKeyboardControllerMovement(InputAction.CallbackContext context) => OnKeyboardControllerMovement();
+		private void OnMouseMovement(InputAction.CallbackContext context) => OnMouseMovement();
+		
+		private void WarpMouse(bool toCenter)
+		{
+			var corner = new Vector2(Screen.width, Screen.height);
+			if (toCenter) Mouse.current.WarpCursorPosition(corner * 0.5f);
+			else Mouse.current.WarpCursorPosition(corner - Vector2.one * 25);
+		}
+#else
+		// Old Input System
+		private StandaloneInputModule _inputSystem;
+		
+		private void FindReferences()
+		{
+			_eventSystem = EventSystem.current;
+			_currentlySelected = _eventSystem.firstSelectedGameObject;
+			if (!_inputSystem) _inputSystem = GetComponent<StandaloneInputModule>();
+			if (!_inputSystem) FindObjectOfType<StandaloneInputModule>();
+		}
+
+		private Vector3 _prevMousePos;
+		private void CheckMouseMovement()
+		{
+			if (!CanUpdate) return; // No need to check for mouse updates
+			var mousePos = Input.mousePosition;
+			if (_usingMouse)
+			{
+				// Check for Keyboard or Controller Movement
+				if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
+				{
+					OnKeyboardControllerMovement();
+				}
+			}
+			else
+			{
+				// Check for Mouse Movement
+				if (Vector3.Distance(mousePos, _prevMousePos) > 1f)
+				{
+					_prevMousePos = mousePos;
+					OnMouseMovement();
+				}
+			}
+		}
+		
+		private void WarpMouse(bool toCenter)
+		{
+			// No Support for Warping Mouse Position in the Old Input System
+		}
+#endif
 		private EventSystem _eventSystem;
 	
 		private static bool _wasController;
@@ -66,33 +142,9 @@ namespace CoffeyUtils
 				WarpMouse(false);
 			}
 		}
-	
-		private void FindReferences()
-		{
-			_eventSystem = EventSystem.current;
-			if (!_inputSystem) _inputSystem = GetComponent<InputSystemUIInputModule>();
-			if (!_inputSystem) FindObjectOfType<InputSystemUIInputModule>();
-		}
-	
-		private void OnEnable()
-		{
-			_inputSystem.move.action.performed += ReturnToKeyboardController;
-			_inputSystem.point.action.performed += OnMouseMovement;
-		}
-	    
-		private void OnDisable()
-		{
-			_inputSystem.move.action.performed -= ReturnToKeyboardController;
-			_inputSystem.point.action.performed -= OnMouseMovement;
-		}
-	
+		
 		private void Update()
 		{
-			if (!_usingMouse)
-			{
-				var obj = _eventSystem.currentSelectedGameObject;
-				if (obj) _currentlySelected = obj;
-			}
 			if (_inGame != InGame)
 			{
 				_inGame = InGame;
@@ -104,9 +156,18 @@ namespace CoffeyUtils
 					WarpMouse(false);
 				}
 			}
+			if (!_usingMouse)
+			{
+				var obj = _eventSystem.currentSelectedGameObject;
+				if (obj) _currentlySelected = obj;
+			}
+#if USE_INPUT_SYSTEM
+#else
+			CheckMouseMovement();
+#endif
 		}
 	
-		private void ReturnToKeyboardController(InputAction.CallbackContext context)
+		private void OnKeyboardControllerMovement()
 		{
 			if (!CanUpdate) return;
 			_wasController = true;
@@ -127,7 +188,7 @@ namespace CoffeyUtils
 			_ignoreMouseMovement = false;
 		}
 	
-		private void OnMouseMovement(InputAction.CallbackContext context)
+		private void OnMouseMovement()
 		{
 			if (!CanUpdate || _ignoreMouseMovement) return;
 			if (_wasController)
@@ -156,19 +217,6 @@ namespace CoffeyUtils
 		private void SetSelected(GameObject obj)
 		{
 			_eventSystem.SetSelectedGameObject(obj);
-		}
-		
-		private void WarpMouse(bool toCenter)
-		{
-			var corner = new Vector2(Screen.width, Screen.height);
-			if (toCenter)
-			{
-				Mouse.current.WarpCursorPosition(corner * 0.5f);
-			}
-			else
-			{
-				Mouse.current.WarpCursorPosition(corner - Vector2.one * 25);
-			}
 		}
 	}
 }
