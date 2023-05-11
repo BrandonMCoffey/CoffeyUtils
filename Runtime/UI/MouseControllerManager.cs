@@ -1,8 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
-#if ENABLE_INPUT_SYSTEM && ENABLE_INPUT_SYSTEM_PACKAGE
-#define USE_INPUT_SYSTEM
+#if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 #endif
@@ -20,10 +19,10 @@ namespace CoffeyUtils
 				instance = FindObjectOfType<MouseControllerManager>();
 				if (!instance)
 				{
-#if USE_INPUT_SYSTEM
+#if ENABLE_INPUT_SYSTEM
 					var inputSystem = FindObjectOfType<InputSystemUIInputModule>();
 					instance = inputSystem.gameObject.AddComponent<MouseControllerManager>();
-#else
+#elif ENABLE_LEGACY_INPUT_MANAGER
 					var inputSystem = FindObjectOfType<StandaloneInputModule>();
 					instance = inputSystem.gameObject.AddComponent<MouseControllerManager>();
 #endif
@@ -43,12 +42,14 @@ namespace CoffeyUtils
 		[SerializeField] private float _ignoreMouseTime = 0.1f;
 		[SerializeField, ReadOnly] private GameObject _currentlySelected;
 		
-#if USE_INPUT_SYSTEM
+#if ENABLE_INPUT_SYSTEM
 		// New Input System
 		private InputSystemUIInputModule _inputSystem;
 
 		private void FindReferences()
 		{
+			_eventSystem = EventSystem.current;
+			_currentlySelected = _eventSystem.firstSelectedGameObject;
 			if (!_inputSystem) _inputSystem = GetComponent<InputSystemUIInputModule>();
 			if (!_inputSystem) FindObjectOfType<InputSystemUIInputModule>();
 		}
@@ -71,7 +72,7 @@ namespace CoffeyUtils
 			if (toCenter) Mouse.current.WarpCursorPosition(corner * 0.5f);
 			else Mouse.current.WarpCursorPosition(corner - Vector2.one * 25);
 		}
-#else
+#elif ENABLE_LEGACY_INPUT_MANAGER
 		// Old Input System
 		private StandaloneInputModule _inputSystem;
 		
@@ -161,8 +162,7 @@ namespace CoffeyUtils
 				var obj = _eventSystem.currentSelectedGameObject;
 				if (obj) _currentlySelected = obj;
 			}
-#if USE_INPUT_SYSTEM
-#else
+#if ENABLE_LEGACY_INPUT_MANAGER
 			CheckMouseMovement();
 #endif
 		}
