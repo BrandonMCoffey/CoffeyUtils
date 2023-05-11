@@ -1,0 +1,16 @@
+{
+    "name": "CoffeyUtilsDemo",
+    "rootNamespace": "",
+    "references": [
+        "GUID:87c5a48ede35f8b4eb07f437d6342a53"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
