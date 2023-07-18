@@ -4,7 +4,7 @@ namespace CoffeyUtils.Sound
 {
     public class Sfx3dProp
     {
-        public const float DefaultSpatialBlend = 1f;
+        public const float DefaultSpatialBlend = 0f;
         public const float DefaultDopplerLevel = 1f;
         public const float DefaultSpread = 0f;
         public const AudioRolloffMode DefaultRolloffMode = AudioRolloffMode.Logarithmic;

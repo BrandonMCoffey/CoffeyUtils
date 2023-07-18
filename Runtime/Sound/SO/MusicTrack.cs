@@ -12,6 +12,7 @@ namespace CoffeyUtils.Sound
         [SerializeField, ReadOnly] private float _trackLength;
         [SerializeField, Range(0, 1)] private float _volume = 1;
         [SerializeField] private AudioMixerGroup _mixerGroup;
+        [SerializeField] private MusicTrack _queueTrackNextWhenPlayed;
 
         [Header("Overlap Settings")]
         [Tooltip("When the song should start if a previous song was playing (Skips to the specified time to not do an unnecessary fade in.)")]
@@ -45,7 +46,11 @@ namespace CoffeyUtils.Sound
             _fromStartWhenToPlayNextSong = _trackLength - _fromEndWhenToPlayNextSong;
         }
 
-        public void Play() => SoundManager.PlayMusicNow(this);
+        public void Play()
+        {
+            SoundManager.PlayMusicNow(this);
+            if (_queueTrackNextWhenPlayed != null) _queueTrackNextWhenPlayed.Queue();
+        }
         public void Queue() => SoundManager.QueueMusic(this);
         
         public void SetSourceProperties(AudioSource source)

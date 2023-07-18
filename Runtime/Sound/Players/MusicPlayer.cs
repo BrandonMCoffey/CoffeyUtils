@@ -43,6 +43,7 @@ namespace CoffeyUtils.Sound
             if (!_source.isPlaying)
             {
                 Stop();
+                if (!_playedNextQueued) SoundManager.Music.PlayQueuedSong();
             }
         }
 

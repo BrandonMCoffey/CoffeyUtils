@@ -45,7 +45,7 @@ namespace CoffeyUtils
 			float inverseTime = 1f / _animationTime;
 			if (active)
 			{
-				for (float t = _delta; t < 1; t += Time.deltaTime * inverseTime)
+				for (float t = _delta; t < 1; t += Time.unscaledDeltaTime * inverseTime)
 				{
 					UpdateDelta(t);
 					yield return null;
@@ -54,7 +54,7 @@ namespace CoffeyUtils
 			}
 			else
 			{
-				for (float t = _delta; t > 0; t -= Time.deltaTime * inverseTime)
+				for (float t = _delta; t > 0; t -= Time.unscaledDeltaTime * inverseTime)
 				{
 					UpdateDelta(t);
 					yield return null;
